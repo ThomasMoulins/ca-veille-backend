@@ -15,7 +15,7 @@ function generateAccessToken(id) {
         3/ le délai d'expiration du token
     */
     return jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+        expiresIn: "7d",
     });
 }
 
