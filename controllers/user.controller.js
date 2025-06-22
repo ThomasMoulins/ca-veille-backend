@@ -1,7 +1,7 @@
 const { tryCatch } = require("../utils/tryCatch");
 const UserModel = require("../models/users.model");
 const CategoryModel = require("../models/categories.model");
-const { checkBody } = require("../modules/checkBody");
+const { checkBody } = require("../utils/checkBody");
 
 exports.deleteUser = tryCatch(async (req, res) => {
     const userId = req.id;

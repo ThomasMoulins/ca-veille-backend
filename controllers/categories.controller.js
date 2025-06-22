@@ -1,9 +1,9 @@
 const CategoryModel = require("../models/categories.model");
 const UserModel = require("../models/users.model");
-const { checkBody } = require("../modules/checkBody");
+const { checkBody } = require("../utils/checkBody");
 const { tryCatch } = require("../utils/tryCatch");
 // create a default category from a predefined list
-const { defaultCategories } = require("../utils/defaultCategories");
+const { defaultCategories } = require("../modules/defaultCategories");
 const {
     getGategoriesArticles,
     getUsersArticles,
