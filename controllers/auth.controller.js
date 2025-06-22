@@ -38,9 +38,7 @@ exports.register = tryCatch(async (req, res) => {
             .json({ result: false, error: "Cannot use this email address" });
     }
 
-    // Encrypt token salt generation
-    const salt = parseInt(process.env.SALT);
-    const hashedPassword = bcrypt.hashSync(password, salt);
+    const hashedPassword = bcrypt.hashSync(password, 10);
 
     const newUser = new UserModel({
         username,
