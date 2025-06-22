@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const UserModel = require("../models/users.model");
-const { checkBody } = require("../modules/checkBody");
+const { checkBody } = require("../utils/checkBody");
 const { tryCatch } = require("../utils/tryCatch");
 
 const EMAIL_REGEX = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g; // regex email, non utilisé

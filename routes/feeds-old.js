@@ -4,7 +4,7 @@ const express = require("express");
 const router = express.Router();
 const DDG = require("duck-duck-scrape");
 const rssFinder = require("rss-finder");
-const { checkBody } = require("../modules/checkBody");
+const { checkBody } = require("../utils/checkBody");
 const { tryCatch } = require("../utils/tryCatch");
 const https = require("https");
 

@@ -4,7 +4,7 @@ const axios = require("axios");
 const xml2js = require("xml2js");
 const { htmlToText } = require("html-to-text");
 const { tryCatch } = require("../utils/tryCatch");
-const { checkBody } = require("../modules/checkBody");
+const { checkBody } = require("../utils/checkBody");
 // trouve le flux rss à partir d'une url
 const rssFinder = require("rss-finder");
 const https = require("https");
