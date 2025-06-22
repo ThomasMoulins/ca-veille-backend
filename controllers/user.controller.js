@@ -189,3 +189,11 @@ exports.updateUserName = tryCatch(async (req, res) => {
 
     return res.json({ result: true, data: username.trim() });
 });
+
+exports.logout = tryCatch(async (req, res) => {
+    const userId = req.id;
+
+    await UserModel.findByIdAndUpdate({ _id: userId }, { token: "" });
+
+    return res.json({ result: true, message: "User successfuly disconnected" });
+});

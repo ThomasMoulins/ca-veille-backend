@@ -8,7 +8,6 @@ const cors = require("cors");
 
 var indexRouter = require("./routes/index");
 const authRouter = require("./routes/auth.route");
-const logoutRouter = require("./routes/logout.route");
 const feedsRouter = require("./routes/feeds.route");
 const categoriesRouter = require("./routes/categories.route");
 const articlesRouter = require("./routes/articles.route");
@@ -30,11 +29,8 @@ app.use("/auth", authRouter);
 app.use(authMiddleware);
 app.use("/users", userRouter);
 app.use("/categories", categoriesRouter);
-
 app.use("/feeds", feedsRouter);
 app.use("/articles", articlesRouter);
-app.use("/logout", logoutRouter);
-
 app.use(errorHandler);
 
 module.exports = app;

@@ -8,6 +8,7 @@ const {
     addFollowedUserById,
     toggleIsPublic,
     updateUserName,
+    logout,
 } = require("../controllers/user.controller");
 var router = express.Router();
 
@@ -19,5 +20,6 @@ router.delete("/followed/:followedUserId", deleteFollowedUserById);
 router.post("/followed/:userToFollowId", addFollowedUserById);
 router.put("/isPublic", toggleIsPublic);
 router.put("/", updateUserName);
+router.put("/", logout);
 
 module.exports = router;
