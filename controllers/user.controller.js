@@ -4,23 +4,23 @@ const CategoryModel = require("../models/categories.model");
 const { checkBody } = require("../modules/checkBody");
 
 exports.deleteUser = tryCatch(async (req, res) => {
-    const { id } = req;
+    const userId = req.id;
 
     // Check if an id is sent by the auth middleware
-    if (!id)
+    if (!userId)
         return res
             .status(401)
             .json({ result: false, error: "No userID found" });
 
     // Check if the user exists in the db to delete it
-    const foundUser = await UserModel.findByIdAndDelete(id);
+    const foundUser = await UserModel.findByIdAndDelete(userId);
     if (!foundUser)
         return res
             .status(404)
             .json({ result: false, error: "such user doesn't exist" });
 
     if (foundUser.categories.length > 0) {
-        await CategoryModel.deleteMany({ ownerId: id });
+        await CategoryModel.deleteMany({ ownerId: userId });
     }
     if (foundUser.followedUsers.length > 0) {
         await UserModel.updateMany(
@@ -29,8 +29,8 @@ exports.deleteUser = tryCatch(async (req, res) => {
         );
     }
     await UserModel.updateMany(
-        { followedUsers: id },
-        { $pull: { followedUsers: id } }
+        { followedUsers: userId },
+        { $pull: { followedUsers: userId } }
     );
 
     return res.json({ result: true });
@@ -79,9 +79,9 @@ exports.deleteUserCategory = tryCatch(async (req, res) => {
 
 exports.deleteFollowedUserById = tryCatch(async (req, res) => {
     const { followedUserId } = req.params;
-    const { id } = req;
+    const userId = req.id;
 
-    const user = await UserModel.findById(id);
+    const user = await UserModel.findById(userId);
     const followedUser = await UserModel.findById(followedUserId);
 
     if (!user)
@@ -115,9 +115,9 @@ exports.deleteFollowedUserById = tryCatch(async (req, res) => {
 
 exports.addFollowedUserById = tryCatch(async (req, res) => {
     const { userToFollowId } = req.params;
-    const { id } = req;
+    const userId = req.id;
 
-    const user = await UserModel.findById(id);
+    const user = await UserModel.findById(userId);
     const followedUser = await UserModel.findById(userToFollowId);
 
     if (!user)
@@ -160,7 +160,7 @@ exports.toggleIsPublic = tryCatch(async (req, res) => {
 });
 
 exports.updateUserName = tryCatch(async (req, res) => {
-    const { id } = req;
+    const userId = req.id;
 
     // Check all fields
     if (!checkBody(req.body, ["username"])) {
@@ -178,7 +178,7 @@ exports.updateUserName = tryCatch(async (req, res) => {
 
     // Check if the user exists in db
     const foundUser = await UserModel.findByIdAndUpdate(
-        { _id: id },
+        { _id: userId },
         { username: username.trim() },
         { new: true }
     );

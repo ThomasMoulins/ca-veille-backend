@@ -11,12 +11,12 @@ const {
 
 // EXPORTS
 exports.getUserArticles = tryCatch(async (req, res) => {
-    const user = req.id;
+    const userId = req.id;
     // récupère la query sous forme d'un tableau grace à un split(",")
     const ids = req.query.ids
         ?.split(",")
         .filter((id) => id && id.trim().length > 0);
-    const userCategories = await UserModel.findById(user);
+    const userCategories = await UserModel.findById(userId);
 
     const categoriesList = await getGategoriesArticles(
         userCategories.categories
@@ -109,7 +109,7 @@ exports.getCategoriesByUserId = tryCatch(async (req, res) => {
 });
 
 exports.getPopularUsers = tryCatch(async (req, res) => {
-    const user = req.id;
+    const userId = req.id;
     const users = await UserModel.find({
         isPublic: true,
         //limit to 100 users
@@ -122,7 +122,7 @@ exports.getPopularUsers = tryCatch(async (req, res) => {
     }
     // remove current user from the list
     const filteredUsers = users.filter(
-        (item) => item._id.toString() !== user.toString()
+        (item) => item._id.toString() !== userId.toString()
     );
     // get only ids sort by followers
     const ids = filteredUsers.map((user) => user._id);
@@ -134,7 +134,7 @@ exports.getPopularUsers = tryCatch(async (req, res) => {
 });
 
 exports.deleteCategoryById = tryCatch(async (req, res) => {
-    const user = req.id;
+    const userId = req.id;
     const categoryId = req.params.categoryId.trim();
 
     const findCategory = await CategoryModel.findById(categoryId);
@@ -144,14 +144,14 @@ exports.deleteCategoryById = tryCatch(async (req, res) => {
             .json({ result: false, error: "Category not found" });
     }
 
-    if (findCategory.ownerId.toString() !== user) {
+    if (findCategory.ownerId.toString() !== userId) {
         return res.status(401).json({ result: false, error: "Not authorized" });
     }
     // delete la categorie et la retire du owner
     await CategoryModel.deleteOne({ _id: categoryId });
 
     await UserModel.updateOne(
-        { _id: user },
+        { _id: userId },
         { $pull: { categories: categoryId } }
     );
 
@@ -165,11 +165,11 @@ exports.createCategory = tryCatch(async (req, res) => {
             .status(400)
             .json({ result: false, error: "Missing or empty fields" });
     }
-    const user = req.id;
+    const userId = req.id;
     const { name, color } = req.body;
     const categoryExists = await CategoryModel.findOne({
         name: { $regex: new RegExp(name.trim(), "i") },
-        ownerId: user,
+        ownerId: userId,
     });
     if (categoryExists) {
         return res
@@ -180,10 +180,10 @@ exports.createCategory = tryCatch(async (req, res) => {
     const newCategory = await CategoryModel.create({
         name: name.trim(),
         color: color.trim(),
-        ownerId: user,
+        ownerId: userId,
     });
 
-    await UserModel.findByIdAndUpdate(user, {
+    await UserModel.findByIdAndUpdate(userId, {
         // doublon avec le regex ?
         $addToSet: { categories: newCategory._id },
     });
@@ -192,7 +192,7 @@ exports.createCategory = tryCatch(async (req, res) => {
 });
 
 exports.createDefaultCategories = tryCatch(async (req, res) => {
-    const user = req.id;
+    const userId = req.id;
     const categoriesNames = req.body.categoriesNames;
     if (!categoriesNames || categoriesNames.length === 0) {
         return res
@@ -211,10 +211,10 @@ exports.createDefaultCategories = tryCatch(async (req, res) => {
             const newCategory = await CategoryModel.create({
                 name: name.trim(),
                 color: color.trim(),
-                ownerId: user.trim(),
+                ownerId: userId.trim(),
                 feeds: feedsId,
             });
-            await UserModel.findByIdAndUpdate(user, {
+            await UserModel.findByIdAndUpdate(userId, {
                 $addToSet: { categories: newCategory._id },
             });
             categoriesID.push(newCategory._id);
@@ -232,7 +232,7 @@ exports.updateColorCategory = tryCatch(async (req, res) => {
             .status(400)
             .json({ result: false, error: "Missing or empty fields" });
     }
-    const user = req.id;
+    const userId = req.id;
     const { color, categoryId } = req.body;
     const findCategory = await CategoryModel.findById(categoryId);
     if (!findCategory) {
@@ -240,7 +240,7 @@ exports.updateColorCategory = tryCatch(async (req, res) => {
             .status(404)
             .json({ result: false, error: "Category not found" });
     }
-    if (findCategory.ownerId.toString() !== user) {
+    if (findCategory.ownerId.toString() !== userId) {
         return res.status(401).json({ result: false, error: "Not authorized" });
     }
     if (findCategory.color.toString() === color.trim()) {
@@ -261,7 +261,7 @@ exports.updateNameCategory = tryCatch(async (req, res) => {
             .status(400)
             .json({ result: false, error: "Missing or empty fields" });
     }
-    const user = req.id;
+    const userId = req.id;
     const { name, categoryId } = req.body;
     const findCategory = await CategoryModel.findById(categoryId);
     if (!findCategory) {
@@ -269,12 +269,12 @@ exports.updateNameCategory = tryCatch(async (req, res) => {
             .status(404)
             .json({ result: false, error: "Category not found" });
     }
-    if (findCategory.ownerId.toString() !== user) {
+    if (findCategory.ownerId.toString() !== userId) {
         return res.status(401).json({ result: false, error: "Not authorized" });
     }
     const categoryExists = await CategoryModel.findOne({
         name: { $regex: new RegExp(name.trim(), "i") },
-        ownerId: user,
+        ownerId: userId,
     });
     if (categoryExists) {
         return res
@@ -289,13 +289,13 @@ exports.updateNameCategory = tryCatch(async (req, res) => {
 
 exports.deleteFeedFromCategory = tryCatch(async (req, res) => {
     const { categoryId, feedId } = req.params;
-    const { id } = req;
+    const userId = req.id;
 
     const foundCategory = await CategoryModel.findById(categoryId);
     if (!foundCategory)
         return res.json({ result: false, error: "Category not found" });
 
-    if (foundCategory.ownerId.toString() !== id)
+    if (foundCategory.ownerId.toString() !== userId)
         return res.status(403).json({
             result: false,
             error: "You can only delete the feeds of your category ${",
@@ -318,7 +318,7 @@ exports.updateColorNameCategory = tryCatch(async (req, res) => {
             .status(400)
             .json({ result: false, error: "Missing or empty fields" });
     }
-    const user = req.id;
+    const userId = req.id;
     const { color, name, categoryId } = req.body;
     const findCategory = await CategoryModel.findById(categoryId);
     if (!findCategory) {
@@ -326,7 +326,7 @@ exports.updateColorNameCategory = tryCatch(async (req, res) => {
             .status(404)
             .json({ result: false, error: "Category not found" });
     }
-    if (findCategory.ownerId.toString() !== user) {
+    if (findCategory.ownerId.toString() !== userId) {
         return res.status(401).json({ result: false, error: "Not authorized" });
     }
     await CategoryModel.findByIdAndUpdate(categoryId, {
