@@ -5,7 +5,7 @@ const { tryCatch } = require("../utils/tryCatch");
 // create a default category from a predefined list
 const { defaultCategories } = require("../modules/defaultCategories");
 const {
-    getGategoriesArticles,
+    getCategoriesArticles,
     getUsersArticles,
 } = require("../modules/getArticles");
 
@@ -18,7 +18,7 @@ exports.getUserArticles = tryCatch(async (req, res) => {
         .filter((id) => id && id.trim().length > 0);
     const userCategories = await UserModel.findById(userId);
 
-    const categoriesList = await getGategoriesArticles(
+    const categoriesList = await getCategoriesArticles(
         userCategories.categories
     );
     const userCategoriesList =
@@ -81,7 +81,7 @@ exports.getCategoriesById = tryCatch(async (req, res) => {
     }
     const ids = req.query.ids?.split(",");
     // method to find in a array of ids, and to populate on multiple leveles
-    const categoriesList = await getGategoriesArticles(ids);
+    const categoriesList = await getCategoriesArticles(ids);
     if (!categoriesList || categoriesList.length === 0) {
         return res
             .status(404)

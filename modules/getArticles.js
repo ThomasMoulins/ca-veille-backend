@@ -33,7 +33,7 @@ async function getUsersArticles(ids) {
 }
 
 // return categories name, id, color and articles of all categories sort by date
-async function getGategoriesArticles(ids) {
+async function getCategoriesArticles(ids) {
     const categories = await CategoryModel.find({ _id: { $in: ids } }).populate(
         {
             path: "feeds",
@@ -62,4 +62,4 @@ async function getGategoriesArticles(ids) {
     return categoriesList;
 }
 
-module.exports = { getGategoriesArticles, getUsersArticles };
+module.exports = { getCategoriesArticles, getUsersArticles };
