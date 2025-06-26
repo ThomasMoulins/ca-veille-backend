@@ -7,7 +7,6 @@ const articleSchema = mongoose.Schema({
     media: String,
     date: Date,
     author: String,
-    defaultMedia: String, // image partagée avec le feed qui contient l'article
 });
 
 const ArticleModel = mongoose.model("articles", articleSchema);
