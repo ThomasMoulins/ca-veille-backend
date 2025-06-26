@@ -1,9 +1,10 @@
-const CategoryModel = require("../models/categories.model");
 const UserModel = require("../models/users.model");
+const CategoryModel = require("../models/categories.model");
 const { checkBody } = require("../utils/checkBody");
 const { tryCatch } = require("../utils/tryCatch");
 // create a default category from a predefined list
 const { defaultCategories } = require("../modules/defaultCategories");
+const { addFeedToBdd } = require("../modules/addFeedToBdd");
 const {
     getCategoriesArticles,
     getUsersArticles,
@@ -25,8 +26,8 @@ exports.getUserArticles = tryCatch(async (req, res) => {
         ids && ids.length > 0 ? await getUsersArticles(ids) : [];
     // merge des articles dans un tableau
     const mergedCategories = [];
-    categoriesList.map((category) =>
-        category.articles.map((article) => {
+    categoriesList.forEach((category) =>
+        category.articles.forEach((article) => {
             const newArticle = article.toObject();
             newArticle.categoryName = category.name;
             newArticle.categoryColor = category.color;
@@ -37,8 +38,8 @@ exports.getUserArticles = tryCatch(async (req, res) => {
         })
     );
     const mergedUsers = [];
-    userCategoriesList.map((user) =>
-        user.articles.map((article) => {
+    userCategoriesList.forEach((user) =>
+        user.articles.forEach((article) => {
             const newArticle = article.toObject();
             newArticle.categoryName = null;
             newArticle.categoryColor = null;
@@ -124,8 +125,6 @@ exports.getPopularUsers = tryCatch(async (req, res) => {
     const filteredUsers = users.filter(
         (item) => item._id.toString() !== userId.toString()
     );
-    // get only ids sort by followers
-    const ids = filteredUsers.map((user) => user._id);
     // use common function
     const popularsArticles = await getUsersArticles(filteredUsers);
     // mongodb ne respectant pas l'ordre du tableau, il faut trié après le retour
@@ -193,7 +192,7 @@ exports.createCategory = tryCatch(async (req, res) => {
 
 exports.createDefaultCategories = tryCatch(async (req, res) => {
     const userId = req.id;
-    const categoriesNames = req.body.categoriesNames;
+    const { categoriesNames } = req.body;
     if (!categoriesNames || categoriesNames.length === 0) {
         return res
             .status(400)
@@ -202,26 +201,39 @@ exports.createDefaultCategories = tryCatch(async (req, res) => {
 
     const categoriesID = [];
     // promise.all attends toutes les promesses avant d'aller à la suite (erreurs incluses)
-    const newCategories = await Promise.all(
+    await Promise.all(
         categoriesNames.map(async (category) => {
             if (!defaultCategories[category]) {
                 return null;
             }
-            const { name, color, feedsId } = defaultCategories[category];
+
+            const { name, color, feeds } = defaultCategories[category];
+
             const newCategory = await CategoryModel.create({
                 name: name.trim(),
                 color: color.trim(),
                 ownerId: userId.trim(),
+                feeds: [],
+            });
+
+            const feedsId = [];
+            for (const feed of feeds) {
+                const feedCreated = await addFeedToBdd(feed, newCategory._id);
+                feedsId.push(feedCreated.id);
+            }
+
+            await CategoryModel.findByIdAndUpdate(newCategory._id, {
                 feeds: feedsId,
             });
+
             await UserModel.findByIdAndUpdate(userId, {
                 $addToSet: { categories: newCategory._id },
             });
+
             categoriesID.push(newCategory._id);
         })
     );
 
-    await Promise.all(newCategories); // Ensure all operations are completed
     return res.status(200).json({ result: true, categoriesID });
 });
 
