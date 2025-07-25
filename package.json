@@ -21,6 +21,7 @@
     "moment": "^2.30.1",
     "mongoose": "^8.15.0",
     "morgan": "~1.9.1",
+    "node-cron": "^4.1.1",
     "rss-finder": "^2.1.5",
     "supertest": "^7.1.1",
     "xml2js": "^0.6.2"
