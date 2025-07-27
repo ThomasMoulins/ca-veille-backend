@@ -46,7 +46,7 @@ const updateFeed = async (feed) => {
         for (const item of items) {
             const url = item.link?.$?.href || item.link;
             if (!url) continue;
-
+            if (newArticleIds.length >= 50) break;
             // Vérifie si déjà en base
             if (!existingUrls.has(url)) {
                 const article = new ArticleModel({
@@ -98,11 +98,8 @@ const updateFeed = async (feed) => {
                 });
                 oldArticles.sort((a, b) => new Date(b.date) - new Date(a.date));
                 for (const old of oldArticles) {
-                    if (newArticleIds.length < 50) {
-                        newArticleIds.push(old._id);
-                    } else {
-                        break;
-                    }
+                    if (newArticleIds.length >= 50) break;
+                    newArticleIds.push(old._id);
                 }
             }
         }
