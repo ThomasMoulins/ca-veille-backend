@@ -15,12 +15,16 @@ async function getUsersArticles(ids) {
             _id: user._id,
             articles: [],
         };
+        const articleSet = new Set();
         user.categories.map((category) => {
-            const articles = [];
             category.feeds.map((feed) => {
-                feed.articles.map((article) => articles.push(article));
+                feed.articles.map((article) => {
+                    if (article && !articleSet.has(article._id.toString())) {
+                        articleSet.add(article._id.toString());
+                        userObject.articles.push(article);
+                    }
+                });
             });
-            userObject.articles = [...userObject.articles, ...articles];
         });
         userObject.articles.sort((a, b) => {
             const dateA = new Date(a.date);
