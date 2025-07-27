@@ -2,8 +2,9 @@ const cron = require("node-cron");
 const axios = require("axios");
 const xml2js = require("xml2js");
 const { htmlToText } = require("html-to-text");
-const ArticleModel = require("../models/articles.model.js");
+const UserModel = require("../models/users.model.js");
 const FeedModel = require("../models/feeds.model.js");
+const ArticleModel = require("../models/articles.model.js");
 
 // La fonction pour updater UN feed (peux être raffinée selon ta logique actuelle)
 const updateFeed = async (feed) => {
@@ -116,19 +117,6 @@ const updateFeed = async (feed) => {
         await FeedModel.findByIdAndUpdate(feed._id, {
             articles: finalArticleIds,
         });
-
-        // 10. Supprime de la BDD les articles non gardés dans le feed (hors réutilisés ailleurs)
-        if (feed.articles && feed.articles.length > 0) {
-            const toDelete = feed.articles.filter(
-                (id) =>
-                    !finalArticleIds.some(
-                        (finalId) => finalId.toString() === id.toString()
-                    )
-            );
-            if (toDelete.length > 0) {
-                await ArticleModel.deleteMany({ _id: { $in: toDelete } });
-            }
-        }
     } catch (err) {
         console.error(`Erreur mise à jour du feed ${feed.url} :`, err.message);
     }
@@ -138,10 +126,35 @@ const updateFeed = async (feed) => {
 const updateAllFeeds = async () => {
     const feeds = await FeedModel.find();
     for (const feed of feeds) {
-        console.log("update feed : ", feed.name);
         await updateFeed(feed);
     }
-    console.log("Tous les feeds ont été mis à jour.");
+
+    // Suppression des articles orphelins (non référencés dans aucun feed et non favoris)
+    const allFeeds = await FeedModel.find({}, { articles: 1 });
+    const usedArticleIds = new Set();
+    allFeeds.forEach((feed) => {
+        feed.articles.forEach((id) => usedArticleIds.add(id.toString()));
+    });
+
+    // Récupère les articles favoris de tous les utilisateurs
+    const allUsers = await UserModel.find({}, { favoriteArticles: 1 });
+    const favoriteArticleIds = new Set();
+    allUsers.forEach((user) => {
+        (user.favoriteArticles || []).forEach((id) =>
+            favoriteArticleIds.add(id.toString())
+        );
+    });
+
+    const allArticles = await ArticleModel.find({}, { _id: 1 });
+    const orphanIds = allArticles
+        .map((a) => a._id.toString())
+        .filter((id) => !usedArticleIds.has(id) && !favoriteArticleIds.has(id));
+    if (orphanIds.length > 0) {
+        await ArticleModel.deleteMany({ _id: { $in: orphanIds } });
+        console.log(
+            `${orphanIds.length} articles orphelins supprimés (hors favoris).`
+        );
+    }
 };
 
 // Planifie la tâche toutes les 10 minutes
