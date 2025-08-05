@@ -3,6 +3,7 @@ const {
     register,
     login,
     logout,
+    refresh,
 } = require("../controllers/auth.controller");
 
 var router = express.Router();
@@ -10,5 +11,6 @@ var router = express.Router();
 router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);
+router.post("/refresh", refresh);
 
 module.exports = router;
