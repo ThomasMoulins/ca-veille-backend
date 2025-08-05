@@ -100,6 +100,22 @@ exports.login = tryCatch(async (req, res) => {
         email: _,
         password: __,
         _id: ___,
+
+exports.logout = tryCatch(async (req, res) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) return res.status(400).json({ error: "No token" });
+
+    const user = await UserModel.findOne({ refreshTokens: refreshToken });
+
+    if (user) {
+        user.refreshTokens = user.refreshTokens.filter(
+            (t) => t !== refreshToken
+        );
+        await user.save();
+    }
+
+    return res.json({ result: true, message: "User successfuly disconnected" });
+});
         ...safeUser
     } = updatedUser.toObject();
 
