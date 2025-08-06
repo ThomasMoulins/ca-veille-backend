@@ -12,6 +12,12 @@ exports.addFeedToBdd = async (siteUrl, categoryId) => {
     const regexUrl = new RegExp(`^https?://(?:www\\.)?${domain}`, "i");
     let feedCreated = await FeedModel.findOne({ url: { $regex: regexUrl } });
 
+    const extractImgFromDescription = (description) => {
+        if (!description) return null;
+        const match = description.match(/<img[^>]+src="([^">]+)"/i);
+        return match ? match[1] : null;
+    };
+
     if (!feedCreated) {
         // Étape 1 : Récupère le flux RSS
         const response = await axios.get(siteUrl);
@@ -39,6 +45,9 @@ exports.addFeedToBdd = async (siteUrl, categoryId) => {
         // test toutes  les balises connues en xml pour récupérer les champs
         const articleArray = await Promise.all(
             items.map(async (item) => {
+                const imgFromDesc = extractImgFromDescription(
+                    item.description || item.content?._ || ""
+                );
                 const newArticle = new ArticleModel({
                     url: item.link?.$?.href || item.link,
                     title: item.title,
@@ -47,10 +56,11 @@ exports.addFeedToBdd = async (siteUrl, categoryId) => {
                         { wordwrap: false }
                     ),
                     media:
+                        item.image ||
                         item.enclosure?.$?.url ||
                         item.enclosure?.url ||
-                        item.image ||
                         item["media:content"]?.$?.url ||
+                        imgFromDesc ||
                         logo ||
                         null,
                     date: item.updated || item.pubDate,
