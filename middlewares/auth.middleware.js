@@ -9,7 +9,7 @@ const authMiddleware = (req, res, next) => {
 
     // Vérifie l'accessToken (JWT court)
     jwt.verify(accessToken, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) return res.sendStatus(403);
+        if (err) return res.sendStatus(401);
         req.id = decoded.id;
 
         // Si tout est bon, l'id est disponible dans nos routes/controlleurs
